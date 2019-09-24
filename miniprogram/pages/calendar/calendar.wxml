@@ -1,0 +1,20 @@
+
+<view class="calendar-page">
+  <view class="calendar-head">
+    <text>{{year}}-</text>
+    <text>{{month}}-</text>
+    <text>{{dayInMonth}}</text>
+  </view>
+  <view class="calendar-body">
+    <view class="calendar-week">
+      <view wx:for="{{week}}" wx:key="{{index}}" class="calendar-item-false">
+        <text>{{item}}</text>
+      </view>
+    </view>
+    <view class="calendar-day">
+      <view wx:for="{{days}}" wx:key="{{index}}" class="calendar-item-{{item.select}}" data-day="{{item.title}}" bindtap="{{item.title>0?'onDayClick':''}}" bindlongpress="{{item.title>0?'onDaySelected':''}}">
+        <text>{{item.title>0?item.title:''}}</text>
+      </view>
+    </view>
+  </view>
+</view>
