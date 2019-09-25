@@ -10,7 +10,11 @@ Page({
     month: 0,
     dayInMonth: 0,
     days:0,
+    editMode:true,
     week: ['日', '一', '二', '三', '四', '五', '六'],
+    buttons: [{ text: '取消' }, { text: '确定' }],
+    targetDays:[],
+    resultDays:[]
   },
 
   /**
@@ -47,29 +51,68 @@ Page({
   },
 
   refreshDays:function(year,month,dayInMonth){
-    let tempDate = new Date(year, month, 0)
-    let dayCount = tempDate.getDate()
-    tempDate.setDate(1)
-    let firstDayInWeek = tempDate.getDay()
-    let days = new Array(dayCount + firstDayInWeek).fill('').map((item, index) => {
-      let title = index - firstDayInWeek + 1
-      let select = dayInMonth === title
-      return { title, select }
-    })
+    let key = `${year}-${month}`
+    if (typeof this.cacheMonthMap === 'undefined'){
+      this.cacheMonthMap = {}
+    }
+    let days = this.cacheMonthMap[key]
+    if(typeof days === 'undefined'){
+      let tempDate = new Date(year, month, 0)
+      let dayCount = tempDate.getDate()
+      tempDate.setDate(1)
+      let firstDayInWeek = tempDate.getDay()
+      days = new Array(dayCount + firstDayInWeek).fill('').map((item, index) => {
+        let day = index - firstDayInWeek + 1
+        let date = `${year}-${month}-${day}`
+        let select 
+        if (this.data.editMode) {
+          if (Array.isArray(this.tempDatas) && this.tempDatas.find(s => s.date === date)){
+            select = true
+          } else {
+            select = false
+          }
+        } else {
+          select = day === dayInMonth
+        }
+        return { day, select, date }
+      })
+      this.cacheMonthMap[key] = days
+    }else{
+      days.forEach(item=>{
+        if (this.data.editMode) {
+          if (Array.isArray(this.tempDatas) && this.tempDatas.find(s => s.date === item.date)){
+            item.select = true
+          } else {
+            item.select = false
+          }
+        } else {
+          item.select = item.day === dayInMonth
+        }
+      })
+    }
     return days
   },
 
   onDayClick :function(event){
     console.log(event)
-    let {day} = event.currentTarget.dataset
-    let days = this.refreshDays(this.data.year, this.data.month, day)
-    this.setData({days,dayInMonth:day})
+    let {item} = event.currentTarget.dataset
+    this.fillTempDatas(item)
+    let days = this.refreshDays(this.data.year, this.data.month, item.day)
+    this.setData({days,dayInMonth:item.day})
   },
-  onDaySelected:function(event){
-    console.log(event)
-    let { day } = event.currentTarget.dataset
 
+  fillTempDatas: function (item){
+    if (typeof this.tempDatas === 'undefined') {
+      this.tempDatas = []
+    }
+    let find = this.tempDatas.find(s => s.date === item.date)
+    if(find){
+      this.tempDatas.splice(this.tempDatas.indexOf(find),1)
+    } else {
+      this.tempDatas.push(item)
+    }
   },
+
   /**
    * 生命周期函数--监听页面隐藏
    */

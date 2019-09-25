@@ -1,4 +1,3 @@
-
 <view class="calendar-page">
   <view class="calendar-head">
     <text>{{year}}-</text>
@@ -12,9 +11,12 @@
       </view>
     </view>
     <view class="calendar-day">
-      <view wx:for="{{days}}" wx:key="{{index}}" class="calendar-item-{{item.select}}" data-day="{{item.title}}" bindtap="{{item.title>0?'onDayClick':''}}" bindlongpress="{{item.title>0?'onDaySelected':''}}">
-        <text>{{item.title>0?item.title:''}}</text>
+      <view wx:for="{{days}}" wx:key="{{index}}" class="calendar-item-{{item.select}}" data-item="{{item}}" bindtap="{{item.day>0?'onDayClick':''}}" >
+        <text>{{item.day>0?item.day:''}}</text>
       </view>
     </view>
   </view>
 </view>
+<!-- <mp-dialog title="tip" show="{{isShowConfirmDialog}}" buttons="{{buttons}}" bindbuttontap="onDialogConfirm"> 
+  <text>confirm big aunt</text>
+</mp-dialog> -->
