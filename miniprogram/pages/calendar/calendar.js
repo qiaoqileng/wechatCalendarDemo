@@ -1,4 +1,5 @@
 // miniprogram/pages/calendar/calendar.js
+import calendarUtils from '../../utils/calendarUtils.js'
 Page({
 
   /**
@@ -38,14 +39,16 @@ Page({
    */
   onShow: function() {
     // TODO 设置默认今天
+    this.childDates = []
+    this.targetDays = []//TODO getData
+    this.resultDays = [...this.targetDays]
+
     let date = new Date()
     let year = date.getFullYear()
     let month = date.getMonth() + 1
-    let dayInMonth = date.getDate()
+    // let dayInMonth = date.getDate()
     let days = this.refreshDays(year, month, dayInMonth)
     
-    this.targetDays = []
-    this.resultDays = []
     this.setData({
       date,
       year,
@@ -117,26 +120,38 @@ Page({
   },
 
   fillTempDatas: function(item) {
-    if (typeof this.tempDatas === 'undefined') {
-      this.tempDatas = []
-    }
-    let find = this.validateTempData(item.date)
-    if (find) {
-      this.tempDatas.splice(this.tempDatas.indexOf(find), 1)
-    } else {
-      this.tempDatas.push(item)
+    let find = false
+    this.tempDatas.forEach(t=>{
+      if (t.sort().toString() === this.childDates.sort().toString()){
+        find = true
+        if(Array.isArray(t) && t.includes(item)){
+          t.splice(t.indexOf(item),1)
+        } else {
+          t.push(item)
+        }
+      }
+    })
+    if (!find) {
+      this.childDates = [item]
+      this.tempDatas.push(this.childDates)
     }
   },
+
   validateTempData:function(date){
-    let find = this.tempDatas.find(s => {
+    let find = this.resultDays.find(s => {
       if(Array.isArray(s)){
-        let find = s.find(d=>d.date === date)
-        if(typeof find !== 'undefined'){
+        let _find = s.find(d=>d.date === date)
+        if (typeof _find !== 'undefined'){
           return true
         }
       }
       return false
     })
+    if(find){
+      return true
+    } else {
+      return false
+    }
   },
   onSetting: function(event) {
     this.tempDatas = this.targetDays
@@ -146,12 +161,15 @@ Page({
   },
   onCancel: function(event) {
     this.tempDatas = []
+    this.childDates = []
     this.setData({
       editMode: false
     })
   },
   onConfirm: function(event) {
+    this.childDates = []
     this.targetDays = this.tempDatas
+    this.resultDays = calendarUtils.getResultDays(this.targetDays)
     this.setData({
       editMode: false
     })
