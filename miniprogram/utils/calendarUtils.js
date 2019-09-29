@@ -1,7 +1,7 @@
 /**
  * 默认计算后3个月
  */
-export const getResultDays = (targetDays, dateRange = 3) => {
+function getResultDays(targetDays, dateRange = 3) {
   let resultDays = [...targetDays]
   if (Array.isArray(resultDays) && resultDays.length > 0) {
     let period = 28
@@ -26,10 +26,12 @@ export const getResultDays = (targetDays, dateRange = 3) => {
     period = (period + _period) / 2
     duration = (duration + _duration) / 2
     // 计算预测日期
+    let i
     for (i = 0; i < dateRange; i++) {
       let lastItem = resultDays[resultDays.length - 1]
       let lastDay = lastItem[lastItem.length - 1]
       let newItem = []
+      let j
       for (j = 0; i < Math.floor(duration); j++) {
         let dateMill = lastDay.mills + (period + j) * 24 * 3600 * 1000
         let date = new Date(dateMill)
@@ -47,8 +49,13 @@ export const getResultDays = (targetDays, dateRange = 3) => {
   return resultDays
 }
 
-export const getDateValue = (a) => {
+function getDateValue(a){
   if (Array.isArray(a) && a.length > 0) {
     return a.mills
   }
+}
+
+module.exports = {
+  getDateValue: getDateValue,
+  getResultDays: getResultDays
 }

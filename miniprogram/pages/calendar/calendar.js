@@ -40,15 +40,15 @@ Page({
   onShow: function() {
     // TODO 设置默认今天
     this.childDates = []
-    this.targetDays = []//TODO getData
+    this.targetDays = [] //TODO getData
     this.resultDays = [...this.targetDays]
 
     let date = new Date()
     let year = date.getFullYear()
     let month = date.getMonth() + 1
-    // let dayInMonth = date.getDate()
+    let dayInMonth = date.getDate()
     let days = this.refreshDays(year, month, dayInMonth)
-    
+
     this.setData({
       date,
       year,
@@ -58,7 +58,7 @@ Page({
     })
   },
 
-  refreshDays: function(year, month, dayInMonth) {
+  refreshDays: function (year = this.data.year, month = this.data.month, dayInMonth=this.data.dayInMonth) {
     let key = `${year}-${month}`
     if (typeof this.cacheMonthMap === 'undefined') {
       this.cacheMonthMap = {}
@@ -74,12 +74,17 @@ Page({
         let date = `${year}-${month}-${day}`
         let select
         if (this.data.editMode) {
-          if (Array.isArray(this.tempDatas) && this.validateTempData(date)) {
+          if (this.validateTempData(this.targetDays, date)) {
             select = true
           } else {
             select = false
           }
         } else {
+          if (this.validateTempData(this.resultDays, date)) {
+            select = true
+          } else {
+            select = false
+          }
           select = day === dayInMonth
         }
         return {
@@ -92,13 +97,19 @@ Page({
       this.cacheMonthMap[key] = days
     } else {
       days.forEach(item => {
-        if (this.data.editMode) {
-          if (Array.isArray(this.tempDatas) && this.validateTempData(item.date)) {
+        if (this.data.editMode) {// 如果是编辑模式,则判断真实数组
+          if (this.validateTempData(this.targetDays,item.date)) {
             item.select = true
           } else {
             item.select = false
           }
-        } else {
+        } else {//如果是展示模式,则展示预测计算过的数组
+          if (this.validateTempData(this.resultDays, item.date)) {
+            item.select = true
+          } else {
+            item.select = false
+          }
+          // TODO 用户点击的选中
           item.select = item.day === dayInMonth
         }
       })
@@ -121,11 +132,11 @@ Page({
 
   fillTempDatas: function(item) {
     let find = false
-    this.tempDatas.forEach(t=>{
-      if (t.sort().toString() === this.childDates.sort().toString()){
+    this.targetDays.forEach(t => {
+      if (t.sort().toString() === this.childDates.sort().toString()) {
         find = true
-        if(Array.isArray(t) && t.includes(item)){
-          t.splice(t.indexOf(item),1)
+        if (Array.isArray(t) && t.includes(item)) {
+          t.splice(t.indexOf(item), 1)
         } else {
           t.push(item)
         }
@@ -133,22 +144,26 @@ Page({
     })
     if (!find) {
       this.childDates = [item]
-      this.tempDatas.push(this.childDates)
+      this.targetDays.push(this.childDates)
     }
   },
 
-  validateTempData:function(date){
-    let find = this.resultDays.find(s => {
-      if(Array.isArray(s)){
-        let _find = s.find(d=>d.date === date)
-        if (typeof _find !== 'undefined'){
-          return true
+  validateTempData: function(array, date) {
+    if (Array.isArray(array) && array.length > 0) {
+      let find = array.find(s => {
+        if (Array.isArray(s)) {
+          let _find = s.find(d => d.date === date)
+          if (typeof _find !== 'undefined') {
+            return true
+          }
         }
+        return false
+      })
+      if (find) {
+        return true
+      } else {
+        return false
       }
-      return false
-    })
-    if(find){
-      return true
     } else {
       return false
     }
@@ -160,18 +175,21 @@ Page({
     })
   },
   onCancel: function(event) {
+    this.targetDays = this.tempDatas
     this.tempDatas = []
     this.childDates = []
+    let days = this.refreshDays()
     this.setData({
-      editMode: false
+      editMode: false, days
     })
   },
   onConfirm: function(event) {
     this.childDates = []
     this.targetDays = this.tempDatas
     this.resultDays = calendarUtils.getResultDays(this.targetDays)
+    let days = this.refreshDays()
     this.setData({
-      editMode: false
+      editMode: false, days
     })
   },
   /**
