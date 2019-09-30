@@ -187,6 +187,7 @@ Page({
     this.childDates = []
     this.targetDays = this.tempDatas
     this.resultDays = calendarUtils.getResultDays(this.targetDays)
+    console.log(this.resultDays)
     let days = this.refreshDays()
     this.setData({
       editMode: false, days
