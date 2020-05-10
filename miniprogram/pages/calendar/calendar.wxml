@@ -1,8 +1,10 @@
 <view class="calendar-page">
   <view class="calendar-head">
+    <view bindtap="onPre">{{pre}}</view>
     <text>{{year}}-</text>
     <text>{{month}}-</text>
     <text>{{dayInMonth}}</text>
+    <view bindtap="onNext">{{next}}</view>
   </view>
   <view class="calendar-body">
     <view class="calendar-week">

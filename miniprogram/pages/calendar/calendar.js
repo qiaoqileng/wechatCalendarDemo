@@ -13,6 +13,9 @@ Page({
     days: 0,
     editMode: false,
     week: ['日', '一', '二', '三', '四', '五', '六'],
+    pre:'<<',
+    next:'>>',
+    hidden:false,
     buttons: [{
       text: '取消'
     }, {
@@ -39,11 +42,30 @@ Page({
    */
   onShow: function() {
     // TODO 设置默认今天
-    this.childDates = []
-    this.targetDays = [] //TODO getData
-    this.resultDays = [...this.targetDays]
+    wx.showLoading({
+      title:'正在获取数据,请稍后...'
+    })
+    let that = this
+    wx.cloud.callFunction({
+      name: 'getData',
+      complete: res => {
+        console.log(res)
+        let {success,targetDays,resultDays} = res.result
+        if(success){
+          this.targetDays = targetDays
+          this.resultDays = resultDays
+        } else {//没的话,默认数据
+          this.targetDays = []
+          this.resultDays = [...this.targetDays]
+        }
+        this.refreshDate(new Date())
+        this.childDates = []
+        wx.hideLoading()
+      }
+    })
+  },
 
-    let date = new Date()
+  refreshDate:function(date){
     let year = date.getFullYear()
     let month = date.getMonth() + 1
     let dayInMonth = date.getDate()
@@ -58,7 +80,7 @@ Page({
     })
   },
 
-  refreshDays: function (year = this.data.year, month = this.data.month, dayInMonth=this.data.dayInMonth) {
+  refreshDays: function(year = this.data.year, month = this.data.month, dayInMonth = this.data.dayInMonth) {
     let key = `${year}-${month}`
     if (typeof this.cacheMonthMap === 'undefined') {
       this.cacheMonthMap = {}
@@ -75,17 +97,19 @@ Page({
         let select
         if (this.data.editMode) {
           if (this.validateTempData(this.targetDays, date)) {
-            select = true
+            select = 2
           } else {
-            select = false
+            select = 0
           }
         } else {
           if (this.validateTempData(this.resultDays, date)) {
-            select = true
+            select = 2
           } else {
-            select = false
+            select = 0
           }
-          select = day === dayInMonth
+          if (day === dayInMonth) {
+            select = 1
+          }
         }
         return {
           day,
@@ -97,20 +121,21 @@ Page({
       this.cacheMonthMap[key] = days
     } else {
       days.forEach(item => {
-        if (this.data.editMode) {// 如果是编辑模式,则判断真实数组
-          if (this.validateTempData(this.targetDays,item.date)) {
-            item.select = true
+        if (this.data.editMode) { // 如果是编辑模式,则判断真实数组
+          if (this.validateTempData(this.targetDays, item.date)) {
+            item.select = 2
           } else {
-            item.select = false
+            item.select = 0
           }
-        } else {//如果是展示模式,则展示预测计算过的数组
+        } else { //如果是展示模式,则展示预测计算过的数组
           if (this.validateTempData(this.resultDays, item.date)) {
-            item.select = true
+            item.select = 2
           } else {
-            item.select = false
+            item.select = 0
           }
-          // TODO 用户点击的选中
-          item.select = item.day === dayInMonth
+          if (item.day === dayInMonth) {
+            item.select = 1
+          }
         }
       })
     }
@@ -122,7 +147,9 @@ Page({
     let {
       item
     } = event.currentTarget.dataset
-    this.fillTempDatas(item)
+    if (this.data.editMode) {
+      this.fillTempDatas(item)
+    }
     let days = this.refreshDays(this.data.year, this.data.month, item.day)
     this.setData({
       days,
@@ -133,13 +160,12 @@ Page({
   fillTempDatas: function(item) {
     let find = false
     this.targetDays.forEach(t => {
-      if (t.sort().toString() === this.childDates.sort().toString()) {
-        find = true
-        if (Array.isArray(t) && t.includes(item)) {
-          t.splice(t.indexOf(item), 1)
-        } else {
-          t.push(item)
-        }
+      find = true
+      let _find = t.find(q => q.mills === item.mills) 
+      if (t.includes(item) || typeof _find !== 'undefined') {
+        t.splice(t.indexOf(_find), 1)
+      } else {
+        t.push(item)
       }
     })
     if (!find) {
@@ -180,18 +206,64 @@ Page({
     this.childDates = []
     let days = this.refreshDays()
     this.setData({
-      editMode: false, days
+      editMode: false,
+      days
     })
   },
   onConfirm: function(event) {
     this.childDates = []
     this.targetDays = this.tempDatas
-    this.resultDays = calendarUtils.getResultDays(this.targetDays)
-    console.log(this.resultDays)
-    let days = this.refreshDays()
-    this.setData({
-      editMode: false, days
+    let _targetDays = this.targetDays
+    wx.showLoading({
+      title: '正在预测,请稍后...',
     })
+    wx.cloud.callFunction({
+      name:'saveData',
+      data:{
+        targetDays: _targetDays
+      },
+      complete:res=>{
+        console.log(res)
+        let success = res.result.success
+        if (success){
+          this.resultDays = res.result.refreshDays
+          console.log(this.resultDays)
+          let days = this.refreshDays()
+          this.setData({
+            editMode: false,
+            days
+          })
+        } else {
+          wx.showToast({
+            title: '提交失败了',
+          })
+        }
+        wx.hideLoading()
+      }
+    })
+    // this.resultDays = calendarUtils.getResultDays(this.targetDays)
+    
+  },
+
+  onPre: function (event){
+    let {month,date,year} = this.data
+    let _date
+    if(month === 1){
+      _date = new Date(year-1,11,1)
+    } else {
+      _date = new Date(year,month-2,1)
+    }
+    this.refreshDate(_date)
+  },
+  onNext: function (event) {
+    let { month, date, year } = this.data
+    let _date
+    if (month === 12) {//由于构造器里的月份是0-11的,本地存的是1-12的
+      _date = new Date(year + 1, 0, 1)
+    } else {
+      _date = new Date(year, month, 1)
+    }
+    this.refreshDate(_date)
   },
   /**
    * 生命周期函数--监听页面隐藏

@@ -33,7 +33,7 @@
   flex-wrap: wrap;
 }
 
-.calendar-item-false{
+.calendar-item-0{
   width:14.2%;
   height: 80rpx;
   text-align: center;
@@ -42,13 +42,26 @@
   align-items: center
 }
 
-.calendar-item-true{
+.calendar-item-1{
   width:14.2%;
   height: 80rpx;
   text-align: center;
-  background-color: red;
+  background-color:paleturquoise;
   color: white;
   display: flex;
+  border-radius: 40rpx;
+  justify-content: center;
+  align-items: center
+}
+
+.calendar-item-2{
+  width:14.2%;
+  height: 80rpx;
+  text-align: center;
+  background-color: 	#FF00FF;
+  color: white;
+  display: flex;
+  border-radius: 40rpx;
   justify-content: center;
   align-items: center
 }
