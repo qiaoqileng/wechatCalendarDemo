@@ -20,11 +20,13 @@ Page({
 
     // 获取用户信息
     wx.getSetting({
+      withSubscriptions:true,
       success: res => {
         if (res.authSetting['scope.userInfo']) {
           // 已经授权，可以直接调用 getUserInfo 获取头像昵称，不会弹框
           wx.getUserInfo({
             success: res => {
+              console.log('qql',res)
               this.setData({
                 avatarUrl: res.userInfo.avatarUrl,
                 userInfo: res.userInfo
@@ -44,6 +46,26 @@ Page({
         userInfo: e.detail.userInfo
       })
     }
+  },
+
+  subcribe: function(e) {
+    console.log('qql',e)
+    wx.requestSubscribeMessage({
+      tmplIds: ['ndaSj7Pr0a7Md2f7Mo5Zqz_hNuGEndzxaQpv1M81VJU'],
+      success:res=>{
+        console.log('qql',res)
+      }
+    })
+  },
+
+  test: function(e){
+    wx.cloud.callFunction({
+      name:'getToken',
+      data:{},
+      success:res=>{
+        console.log('qql',res)
+      }
+    })
   },
 
   onGetOpenid: function() {

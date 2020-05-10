@@ -60,4 +60,12 @@
       <text>日历</text>
     </navigator>
   </view>
+    <!-- 订阅消息 -->
+  <view class="uploader">
+      <text bindtap="subcribe" class="uploader-text">订阅消息</text>
+  </view>
+      <!-- 订阅消息 -->
+  <view class="uploader">
+      <text bindtap="test" class="uploader-text">test</text>
+  </view>
 </view>
